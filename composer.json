@@ -1,0 +1,54 @@
+{
+    "name": "laraditz/experian",
+    "description": "A simple laravel package for Experian.",
+    "keywords": [
+        "laraditz",
+        "experian"
+    ],
+    "homepage": "https://github.com/laraditz/experian",
+    "license": "MIT",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Raditz Farhan",
+            "email": "raditzfarhan@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^7.4|^8.0",
+        "illuminate/support": "^8.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^6.0",
+        "phpunit/phpunit": "^9.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Laraditz\\Experian\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Laraditz\\Experian\\Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "test-coverage": "vendor/bin/phpunit --coverage-html coverage"
+
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Laraditz\\Experian\\ExperianServiceProvider"
+            ],
+            "aliases": {
+                "Experian": "Laraditz\\Experian\\ExperianFacade"
+            }
+        }
+    }
+}
