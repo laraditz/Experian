@@ -2,10 +2,10 @@
 
 namespace Laraditz\Experian;
 
-use App\Models\ExperianRecord;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
+use Laraditz\Experian\Models\ExperianRecord;
 use Laraditz\Experian\Models\ExperianRequest;
 use LogicException;
 
