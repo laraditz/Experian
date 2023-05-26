@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('experian_records', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('ref_no', 100)->nullable();
             $table->json('ccris_search')->nullable();
             $table->json('ccris_entity')->nullable();
