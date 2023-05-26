@@ -39,13 +39,14 @@ php artisan migrate
 ### Search CCRIS
 
 ```php
-
+// Using service container
 $experian = app('experian')->ccrisSearch(
             name: "Ali bin Ahmad",
             id: "92XXXX-XX-XXXX",
             dob: "YYYY-MM-DD"
         );  
-        
+
+// Using facade
 $experian = \Experian::ccrisSearch(
             name: "Ali bin Ahmad",
             id: "92XXXX-XX-XXXX",
