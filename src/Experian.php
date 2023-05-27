@@ -173,12 +173,12 @@ class Experian
         });
 
         if ($response->successful()) {
-            $response = simplexml_load_string($response->body());
+            $responseObj = simplexml_load_string($response->body());
 
-            if (data_get($response, 'code') && data_get($response, 'code') != '200') {
-                $experian->error_response = $response;
+            if (data_get($responseObj, 'code') && data_get($responseObj, 'code') != '200') {
+                $experian->error_response = $responseObj;
             } else {
-                $experian->response = $response;
+                $experian->response = $responseObj;
             }
 
             $experian->save();
