@@ -37,7 +37,7 @@ class Experian
         ?string $phone = null,
         ?string $email = null,
         ?string $address = null
-    ) {
+    ): array {
         $data = [
             'ProductType' => 'CCRIS_SEARCH',
             'GroupCode' => '11',
