@@ -5,6 +5,7 @@ namespace Laraditz\Experian;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
+use Laraditz\Experian\Enums\RecordStatus;
 use Laraditz\Experian\Models\ExperianRecord;
 use Laraditz\Experian\Models\ExperianRequest;
 use LogicException;
@@ -85,16 +86,40 @@ class Experian
 
         $report = $this->retrieveReport(data_get($ccrisEntity, 'token1'), data_get($ccrisEntity, 'token2'));
 
-        throw_if(!$report, LogicException::class, 'Retrieve report failed.');
-        throw_if(data_get($report, 'code') && data_get($report, 'code') != '200', LogicException::class, data_get($report, 'error') ?? 'Failed to retrieve report.');
+        throw_if(!$this->retrieveReportSuccess($experianRecord, $report), LogicException::class, 'Retrieve report failed.');
 
         $experianRecord->ccris_report = $report;
+        $experianRecord->status = (int)data_get($report, 'code') === 102 ? RecordStatus::Processing : RecordStatus::Completed;
         $experianRecord->save();
 
         return [
             'ref_no' => $experianRecord->ref_no,
             'report' => $experianRecord->ccris_report,
+            'status' => $experianRecord->status
         ];
+    }
+
+    private function retrieveReportSuccess(ExperianRecord $experianRecord, ?array $report): bool
+    {
+        if (!$report) {
+            $experianRecord->status = RecordStatus::Failed;
+            $experianRecord->save();
+
+            return false;
+        }
+
+        if (data_get($report, 'code')) {
+            $code = (int)data_get($report, 'code');
+
+            if (!in_array($code, [102, 200])) {
+                $experianRecord->status = RecordStatus::Failed;
+                $experianRecord->save();
+
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public function confirmCcrisEntity(

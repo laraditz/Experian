@@ -5,17 +5,19 @@ namespace Laraditz\Experian\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Laraditz\Experian\Enums\RecordStatus;
 
 class ExperianRecord extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['id', 'ref_no', 'ccris_search', 'ccris_entity', 'ccris_report'];
+    protected $fillable = ['id', 'ref_no', 'ccris_search', 'ccris_entity', 'ccris_report', 'status'];
 
     protected $casts = [
         'ccris_search' => 'json',
         'ccris_entity' => 'json',
         'ccris_report' => 'json',
+        'status' => RecordStatus::class,
     ];
 
     public function getIncrementing()
@@ -35,6 +37,7 @@ class ExperianRecord extends Model
         static::creating(function ($model) {
             $model->{$model->getKeyName()} = $model->id ?? (string) Str::orderedUuid();
             $model->ref_no = $model->ref_no ?? self::generateRefNo();
+            $model->status = $model->status ?? RecordStatus::Pending;
         });
     }
 
