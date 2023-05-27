@@ -197,13 +197,6 @@ class Experian
         return $response;
     }
 
-    private function logRequest(string $message, array $context = [])
-    {
-        if (config('experian.log_request')) {
-            logger()->info('Experian: ' . $message, $context);
-        }
-    }
-
     private function objectToString(array|object $message): string
     {
         return is_array($message) || is_object($message) ? json_encode($message) : $message;
@@ -321,7 +314,7 @@ class Experian
         return $xml->asXML();
     }
 
-    private function generateRefNo()
+    private function generateRefNo(): string
     {
         $ref_no = $this->randomAlphanumeric();
 
@@ -332,10 +325,17 @@ class Experian
         return $ref_no;
     }
 
-    private function randomAlphanumeric(int $length = 8)
+    private function randomAlphanumeric(int $length = 8): string
     {
         $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
         return substr(str_shuffle($characters), 0, $length);
+    }
+
+    private function logRequest(string $message, array $context = []): void
+    {
+        if (config('experian.log_request')) {
+            logger()->info('Experian: ' . $message, $context);
+        }
     }
 }
