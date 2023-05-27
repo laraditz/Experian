@@ -72,25 +72,28 @@ class Experian
             address: $address
         );
 
-        if ($ccrisEntity) {
-            $experianRecord = ExperianRecord::create([
-                'ref_no' => $refNo,
-                'ccris_search' => $responseObj,
-                'ccris_entity' =>  $ccrisEntity
-            ]);
+        throw_if(!$ccrisEntity, LogicException::class, 'Confirm CCRIS Identity failed.');
 
-            $report = $this->retrieveReport(data_get($ccrisEntity, 'token1'), data_get($ccrisEntity, 'token2'));
+        $experianRecord = ExperianRecord::create([
+            'ref_no' => $refNo,
+            'ccris_search' => $responseObj,
+            'ccris_entity' =>  $ccrisEntity
+        ]);
 
-            if ($experianRecord && $report) {
-                $experianRecord->ccris_report = $report;
-                $experianRecord->save();
+        throw_if(!$experianRecord, LogicException::class, 'Failed to save experian record.');
 
-                return [
-                    'ref_no' => $experianRecord->ref_no,
-                    'report' => $experianRecord->ccris_report,
-                ];
-            }
-        }
+        $report = $this->retrieveReport(data_get($ccrisEntity, 'token1'), data_get($ccrisEntity, 'token2'));
+
+        throw_if(!$report, LogicException::class, 'Retrieve report failed.');
+        throw_if(data_get($report, 'code') && data_get($report, 'code') != '200', LogicException::class, data_get($report, 'error') ?? 'Failed to retrieve report.');
+
+        $experianRecord->ccris_report = $report;
+        $experianRecord->save();
+
+        return [
+            'ref_no' => $experianRecord->ref_no,
+            'report' => $experianRecord->ccris_report,
+        ];
     }
 
     public function confirmCcrisEntity(
@@ -176,7 +179,7 @@ class Experian
             $responseObj = simplexml_load_string($response->body());
 
             if (data_get($responseObj, 'code') && data_get($responseObj, 'code') != '200') {
-                $experian->error_response = $responseObj;
+                $experian->error_response = $this->convertObjectToString($responseObj);
             } else {
                 $experian->response = $responseObj;
             }
@@ -185,6 +188,11 @@ class Experian
         }
 
         return $response;
+    }
+
+    private function convertObjectToString(array|object $message): string
+    {
+        return is_array($message) || is_object($message) ? json_encode($message) : $message;
     }
 
     private function method(string $method)
