@@ -59,7 +59,8 @@ class Experian
 
         throw_if(!$response->successful(), LogicException::class, 'Search CCRIS failed.');
 
-        $responseObj = simplexml_load_string($response->body());
+        $responseObj = $this->xmlToArray($response->body());
+
         $refNo = $this->generateRefNo();
 
         $ccrisEntity = $this->confirmCcrisEntity(
@@ -104,7 +105,7 @@ class Experian
         ?string $email = null,
         ?string $address = null,
         array|object|null $spgaIdentity = null,
-    ) {
+    ): array {
 
         throw_if(!($phone || $email || $address), LogicException::class, 'Must supply at least one of this contact information: phone, email, address.');
 
@@ -132,13 +133,13 @@ class Experian
 
         throw_if(!$response->successful(), LogicException::class, 'Confirm CCRIS Entity failed.');
 
-        return simplexml_load_string($response->body());
+        return $this->xmlToArray($response->body());
     }
 
     public function retrieveReport(
         string $token1,
         string $token2
-    ) {
+    ): array {
 
         $data = [
             'token1' => $token1,
@@ -151,7 +152,7 @@ class Experian
 
         throw_if(!$response->successful(), LogicException::class, 'Retrieve record failed.');
 
-        return simplexml_load_string($response->body());
+        return $this->xmlToArray($response->body());
     }
 
     private function makeRequest(string $endpoint, array $data = []): Response
@@ -176,10 +177,10 @@ class Experian
         });
 
         if ($response->successful()) {
-            $responseObj = simplexml_load_string($response->body());
+            $responseObj = $this->xmlToArray($response->body());
 
             if (data_get($responseObj, 'code') && data_get($responseObj, 'code') != '200') {
-                $experian->error_response = $this->convertObjectToString($responseObj);
+                $experian->error_response = $this->objectToString($responseObj);
             } else {
                 $experian->response = $responseObj;
             }
@@ -190,10 +191,20 @@ class Experian
         return $response;
     }
 
-    private function convertObjectToString(array|object $message): string
+    private function objectToString(array|object $message): string
     {
         return is_array($message) || is_object($message) ? json_encode($message) : $message;
     }
+
+    function xmlToArray(string $string): array
+    {
+        $xml   = simplexml_load_string($string, 'SimpleXMLElement', LIBXML_NOCDATA);
+
+        $array = json_decode(json_encode($xml), TRUE);
+
+        return $array;
+    }
+
 
     private function method(string $method)
     {
