@@ -88,8 +88,10 @@ class Experian
 
         throw_if(!$this->retrieveReportSuccess($experianRecord, $report), LogicException::class, 'Retrieve report failed.');
 
-        $experianRecord->ccris_report = $report;
-        $experianRecord->status = (int)data_get($report, 'code') === 102 ? RecordStatus::Processing : RecordStatus::Completed;
+        $reportCode = (int)data_get($report, 'code');
+
+        $experianRecord->ccris_report = $reportCode === 102 ? null : $report;
+        $experianRecord->status = $reportCode === 102 ? RecordStatus::Processing : RecordStatus::Completed;
         $experianRecord->save();
 
         return [
@@ -97,29 +99,6 @@ class Experian
             'report' => $experianRecord->ccris_report,
             'status' => $experianRecord->status
         ];
-    }
-
-    private function retrieveReportSuccess(ExperianRecord $experianRecord, ?array $report): bool
-    {
-        if (!$report) {
-            $experianRecord->status = RecordStatus::Failed;
-            $experianRecord->save();
-
-            return false;
-        }
-
-        if (data_get($report, 'code')) {
-            $code = (int)data_get($report, 'code');
-
-            if (!in_array($code, [102, 200])) {
-                $experianRecord->status = RecordStatus::Failed;
-                $experianRecord->save();
-
-                return false;
-            }
-        }
-
-        return true;
     }
 
     public function confirmCcrisEntity(
@@ -180,6 +159,38 @@ class Experian
         return $this->xmlToArray($response->body());
     }
 
+    public function checkProcessingReport(string $refNo): array
+    {
+        $experianRecord = ExperianRecord::where('ref_no', $refNo)->firstOrFail();
+
+        throw_if($experianRecord->status !== RecordStatus::Processing, LogicException::class, 'Status is not processing.');
+        throw_if(!$experianRecord->ccris_entity, LogicException::class, 'Missing tokens.');
+
+        $response = $this->method('post')
+            ->action('checkProcessingReport')
+            ->makeRequest('xml', $experianRecord->ccris_entity);
+
+        throw_if(!$response->successful(), LogicException::class, 'Check processing record failed.');
+
+        $report = $this->xmlToArray($response->body());
+
+        throw_if(!$this->retrieveReportSuccess($experianRecord, $report), LogicException::class, 'Retrieve report failed.');
+
+        $reportCode = (int)data_get($report, 'code');
+
+        if ($reportCode !== 102) {
+            $experianRecord->ccris_report = $report;
+            $experianRecord->status = RecordStatus::Completed;
+            $experianRecord->save();
+        }
+
+        return [
+            'ref_no' => $experianRecord->ref_no,
+            'report' => $experianRecord->ccris_report,
+            'status' => $experianRecord->status
+        ];
+    }
+
     private function makeRequest(string $endpoint, array $data = []): Response
     {
         throw_if(!$this->getAction(), LogicException::class, 'Action not set.');
@@ -220,6 +231,29 @@ class Experian
         }
 
         return $response;
+    }
+
+    private function retrieveReportSuccess(ExperianRecord $experianRecord, ?array $report): bool
+    {
+        if (!$report) {
+            $experianRecord->status = RecordStatus::Failed;
+            $experianRecord->save();
+
+            return false;
+        }
+
+        if (data_get($report, 'code')) {
+            $code = (int)data_get($report, 'code');
+
+            if (!in_array($code, [102, 200])) {
+                $experianRecord->status = RecordStatus::Failed;
+                $experianRecord->save();
+
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private function objectToString(array|object $message): string
