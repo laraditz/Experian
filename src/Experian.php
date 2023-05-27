@@ -43,9 +43,10 @@ class Experian
             'GroupCode' => '11',
             'EntityName' => $name,
             'EntityId' => $id,
-            'SpgaId' => $id,
             'Country' => $country,
             'DOB' => $dob,
+            'SpgaId' => $id,
+            'IDCode' => 'C',
         ];
 
         if ($id2) {
@@ -172,7 +173,14 @@ class Experian
         });
 
         if ($response->successful()) {
-            $experian->response = simplexml_load_string($response->body());
+            $response = simplexml_load_string($response->body());
+
+            if (data_get($response, 'code') && data_get($response, 'code') != '200') {
+                $experian->error_response = $response;
+            } else {
+                $experian->response = $response;
+            }
+
             $experian->save();
         }
 
