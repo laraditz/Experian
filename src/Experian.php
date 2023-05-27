@@ -161,6 +161,11 @@ class Experian
             $experian->save();
         });
 
+        if ($response->successful()) {
+            $experian->response = simplexml_load_string($response->body());
+            $experian->save();
+        }
+
         return $response;
     }
 
