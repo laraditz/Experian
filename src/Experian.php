@@ -66,7 +66,7 @@ class Experian
             refNo: $refNo,
             refId: data_get($responseObj, 'ccris_identity.item.CRefId'),
             entityKey: data_get($responseObj, 'ccris_identity.item.EntityKey'),
-            spgaIdentity: data_get($responseObj, 'ccris_identity.spga_identity') ?? null,
+            spgaIdentity: data_get($responseObj, 'spga_identity') ?? null,
             phone: $phone,
             email: $email,
             address: $address
