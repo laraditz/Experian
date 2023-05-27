@@ -33,19 +33,23 @@ class Experian
         string $id,
         string $dob,
         string $country = 'MY',
-        string $id2 = '',
-        string $phone = '',
-        string $email = ''
+        ?string $id2 = null,
+        ?string $phone = null,
+        ?string $email = null,
+        ?string $address = null
     ) {
         $data = [
             'ProductType' => 'CCRIS_SEARCH',
             'GroupCode' => '11',
             'EntityName' => $name,
             'EntityId' => $id,
-            'EntityId2' => $id2,
             'Country' => $country,
             'DOB' => $dob,
         ];
+
+        if ($id2) {
+            $data['EntityId2'] = $id2;
+        }
 
         $response = $this->method('post')
             ->action('ccrisSearch')
@@ -62,7 +66,8 @@ class Experian
             entityKey: data_get($responseObj, 'ccris_identity.item.EntityKey'),
             spgaIdentity: data_get($responseObj, 'ccris_identity.spga_identity') ?? null,
             phone: $phone,
-            email: $email
+            email: $email,
+            address: $address
         );
 
         if ($ccrisEntity) {
@@ -90,16 +95,20 @@ class Experian
         string $refNo,
         string $refId,
         string $entityKey,
-        string $phone = '',
-        string $email = '',
+        ?string $phone = null,
+        ?string $email = null,
+        ?string $address = null,
         array|object|null $spgaIdentity = null,
     ) {
+
+        throw_if(!($phone || $email || $address), LogicException::class, 'Must supply at least one of this contact information: phone, email, address.');
+
         $data = [
             'CRefId' => $refId,
             'EntityKey' =>  $entityKey,
             'MobileNo' => $phone,
             'EmailAddress' => $email,
-            'LastKnownAddress' => '',
+            'LastKnownAddress' => $address,
             'ConsentGranted' => 'Y',
             'EnquiryPurpose' => 'REVIEW',
             'Ref1' => $refNo,
