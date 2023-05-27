@@ -43,6 +43,7 @@ class Experian
             'GroupCode' => '11',
             'EntityName' => $name,
             'EntityId' => $id,
+            'SpgaId' => $id,
             'Country' => $country,
             'DOB' => $dob,
         ];
