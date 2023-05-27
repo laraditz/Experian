@@ -148,7 +148,7 @@ class Experian
 
         $response = $this->method('post')
             ->action('retrieveReport')
-            ->makeRequest('report', $data);
+            ->makeRequest('xml', $data);
 
         throw_if(!$response->successful(), LogicException::class, 'Retrieve record failed.');
 
@@ -167,6 +167,8 @@ class Experian
         // convert data to xml
         $xmlBody = $this->array2xml($data);
 
+        $this->logRequest($this->getAction() . '|' . $xmlBody);
+
         $response =  Http::withBasicAuth($this->getUsername(), $this->getPassword())
             ->withBody($xmlBody, 'application/xml')
             ->{$this->getMethod()}($this->getBaseUrl() . '/' . $endpoint);
@@ -174,6 +176,8 @@ class Experian
         $response->throw(function (Response $response, RequestException $e) use ($experian) {
             $experian->error_response = $e->getMessage();
             $experian->save();
+
+            $this->logRequest($this->getAction() . '|' . $e->getMessage());
         });
 
         if ($response->successful()) {
@@ -186,9 +190,18 @@ class Experian
             }
 
             $experian->save();
+
+            $this->logRequest($this->getAction() . '|' .  $this->objectToString($responseObj));
         }
 
         return $response;
+    }
+
+    private function logRequest(string $message, array $context = [])
+    {
+        if (config('experian.log_request')) {
+            logger()->info('Experian: ' . $message, $context);
+        }
     }
 
     private function objectToString(array|object $message): string
