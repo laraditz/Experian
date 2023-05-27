@@ -191,6 +191,17 @@ class Experian
         ];
     }
 
+    public function getRecord(string $refNo): array
+    {
+        $experianRecord = ExperianRecord::where('ref_no', $refNo)->firstOrFail();
+
+        return [
+            'ref_no' => $experianRecord->ref_no,
+            'report' => $experianRecord->ccris_report,
+            'status' => $experianRecord->status
+        ];
+    }
+
     private function makeRequest(string $endpoint, array $data = []): Response
     {
         throw_if(!$this->getAction(), LogicException::class, 'Action not set.');
