@@ -108,7 +108,7 @@ class Experian
         ?string $phone = null,
         ?string $email = null,
         ?string $address = null,
-        array|object|null $spgaIdentity = null,
+        array|object|null $spgaIdentity = null
     ): array {
 
         throw_if(!($phone || $email || $address), LogicException::class, 'Must supply at least one of this contact information: phone, email, address.');

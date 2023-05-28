@@ -34,6 +34,20 @@ Run the migration command to create the necessary database table.
 php artisan migrate
 ```
 
+## Available Methods
+
+Below are all methods available under this package.
+
+- `ccrisSearch(string $name, string $id, string $dob, ?string $country, ?string $id2, ?string $phone, ?string $email, ?string $address)`
+    - At least one of `phone`, `email`, `address` must be present.
+    - `id` argument is for New IC or Passport No.
+    - `id2` argument is for old IC or Poice ID.
+    - IC format XXXXXX-XX-XXXX.
+    - `dob` format YYYY-MM-DD.
+    - `country` default to MY.
+- `checkProcessingReport(string $refNo)`
+- `getRecord(string $refNo)`
+
 ## Usage
 
 ### Search CCRIS
@@ -43,14 +57,16 @@ php artisan migrate
 $experian = app('experian')->ccrisSearch(
             name: "Ali bin Ahmad",
             id: "92XXXX-XX-XXXX",
-            dob: "YYYY-MM-DD"
+            dob: "YYYY-MM-DD",
+            phone: "012XXXXXXX" 
         );  
 
 // Using facade
 $experian = \Experian::ccrisSearch(
             name: "Ali bin Ahmad",
             id: "92XXXX-XX-XXXX",
-            dob: "YYYY-MM-DD"
+            dob: "YYYY-MM-DD",
+            phone: "012XXXXXXX" 
         ); 
 ```
 
