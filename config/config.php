@@ -13,4 +13,5 @@ return [
         'base_url' => 'https://b2buat.experian.com.my/index.php',
     ],
     'log_request' => env('EXPERIAN_LOG_REQUEST', false),
+    'unallowed_list' => env('EXPERIAN_UNALLOWED_LIST'),
 ];

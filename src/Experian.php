@@ -9,6 +9,7 @@ use Laraditz\Experian\Enums\RecordStatus;
 use Laraditz\Experian\Models\ExperianRecord;
 use Laraditz\Experian\Models\ExperianRequest;
 use LogicException;
+use Illuminate\Support\Str;
 
 class Experian
 {
@@ -39,6 +40,9 @@ class Experian
         ?string $email = null,
         ?string $address = null
     ): array {
+
+        throw_if(!$this->isAllowed($id), LogicException::class, 'Unable to retrieve report.');
+
         $data = [
             'ProductType' => 'CCRIS_SEARCH',
             'GroupCode' => '11',
@@ -407,5 +411,25 @@ class Experian
         if (config('experian.log_request')) {
             logger()->info('Experian: ' . $message, $context);
         }
+    }
+
+    private function isAllowed(string $id): bool
+    {
+        $list = $this->getUnallowedList();
+
+        if ($list) {
+            $listArr = explode(',', $list);
+
+            if (in_array(Str::replace('-', '', $id), $listArr)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function getUnallowedList(): string|null
+    {
+        return config('experian.unallowed_list');
     }
 }
