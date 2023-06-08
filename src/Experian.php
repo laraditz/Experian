@@ -67,11 +67,17 @@ class Experian
         $responseObj = $this->xmlToArray($response->body());
 
         $refNo = $this->generateRefNo();
+        $refId = is_array(data_get($responseObj, 'ccris_identity.item')) ?
+            data_get($responseObj, 'ccris_identity.item.0.CRefId')
+            : data_get($responseObj, 'ccris_identity.item.CRefId');
+        $entityKey = is_array(data_get($responseObj, 'ccris_identity.item')) ?
+            data_get($responseObj, 'ccris_identity.item.0.EntityKey')
+            : data_get($responseObj, 'ccris_identity.item.EntityKey');
 
         $ccrisEntity = $this->confirmCcrisEntity(
             refNo: $refNo,
-            refId: data_get($responseObj, 'ccris_identity.item.CRefId'),
-            entityKey: data_get($responseObj, 'ccris_identity.item.EntityKey'),
+            refId: $refId,
+            entityKey: $entityKey,
             spgaIdentity: data_get($responseObj, 'spga_identity') ?? null,
             phone: $phone,
             email: $email,
@@ -218,7 +224,7 @@ class Experian
         // convert data to xml
         $xmlBody = $this->array2xml($data);
 
-        $this->logRequest($this->getAction() . '|' . $xmlBody);
+        $this->logRequest($this->getAction() . ' Request|' . $xmlBody);
 
         $response =  Http::withBasicAuth($this->getUsername(), $this->getPassword())
             ->withBody($xmlBody, 'application/xml')
@@ -228,7 +234,7 @@ class Experian
             $experian->error_response = $e->getMessage();
             $experian->save();
 
-            $this->logRequest($this->getAction() . '|' . $e->getMessage());
+            $this->logRequest($this->getAction() . ' Error|' . $e->getMessage());
         });
 
         if ($response->successful()) {
@@ -242,7 +248,8 @@ class Experian
 
             $experian->save();
 
-            $this->logRequest($this->getAction() . '|' .  $this->objectToString($responseObj));
+            $this->logRequest($this->getAction() . ' Response|' .  $response->body());
+            $this->logRequest($this->getAction() . ' Formatted Response|' .  $this->objectToString($responseObj));
         }
 
         return $response;
