@@ -67,12 +67,11 @@ class Experian
         $responseObj = $this->xmlToArray($response->body());
 
         $refNo = $this->generateRefNo();
-        $refId = is_array(data_get($responseObj, 'ccris_identity.item')) ?
-            data_get($responseObj, 'ccris_identity.item.0.CRefId')
-            : data_get($responseObj, 'ccris_identity.item.CRefId');
-        $entityKey = is_array(data_get($responseObj, 'ccris_identity.item')) ?
-            data_get($responseObj, 'ccris_identity.item.0.EntityKey')
-            : data_get($responseObj, 'ccris_identity.item.EntityKey');
+        $refId = data_get($responseObj, 'ccris_identity.item.CRefId') ?? data_get($responseObj, 'ccris_identity.item.0.CRefId');
+        $entityKey = data_get($responseObj, 'ccris_identity.item.EntityKey') ?? data_get($responseObj, 'ccris_identity.item.0.EntityKey');
+
+        throw_if(!$refId, LogicException::class, 'Missing CRefId.');
+        throw_if(!$entityKey, LogicException::class, 'Missing EntityKey.');
 
         $ccrisEntity = $this->confirmCcrisEntity(
             refNo: $refNo,
